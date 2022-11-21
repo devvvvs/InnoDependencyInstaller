@@ -232,6 +232,36 @@ begin
   Result := ShellExec('', ExpandConstant('{tmp}{\}') + 'netcorecheck' + Dependency_ArchSuffix + '.exe', Version, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
 end;
 
+{ Exec with output stored in result. }
+{ ResultString will only be altered if True is returned. }
+function ExecWithResult(const Filename, Params, WorkingDir: String; const ShowCmd: Integer;
+  const Wait: TExecWait; var ResultCode: Integer; var ResultString: String): Boolean;
+var
+  TempFilename: String;
+  Command: String;
+  TempResultString: AnsiString;
+begin
+  TempFilename := ExpandConstant('{tmp}\~execwithresult.txt');
+  { Exec via cmd and redirect output to file. Must use special string-behavior to work. }
+  Command :=
+    Format('"%s" /S /C ""%s" %s > "%s""', [
+      ExpandConstant('{cmd}'), Filename, Params, TempFilename]);
+  Result := Exec(ExpandConstant('{cmd}'), Command, WorkingDir, ShowCmd, Wait, ResultCode);
+  if not Result then
+    Exit;
+  LoadStringFromFile(TempFilename, TempResultString);  { Cannot fail }
+  DeleteFile(TempFilename);
+  ResultString := String(TempResultString);
+end;
+
+function Dependency_IsNetSdkInstalled(const Version: String): Boolean;
+var
+  ResultCode: Integer;
+  ResultString: String;
+begin
+  Result := ExecWithResult('dotnet', '--list-sdks', '', SW_HIDE, ewWaitUntilTerminated, ResultCode, ResultString) and (ResultCode = 0) and (Pos(Version, ResultString) > 0);
+end;
+
 procedure Dependency_AddDotNet35;
 begin
   // https://dotnet.microsoft.com/download/dotnet-framework/net35-sp1
@@ -408,6 +438,18 @@ begin
       '/lcid ' + IntToStr(GetUILanguage) + ' /passive /norestart',
       '.NET Desktop Runtime 6.0.11' + Dependency_ArchTitle,
       Dependency_String('https://download.visualstudio.microsoft.com/download/pr/2a392287-fd51-4ee8-9c15-a672ab9bc55d/03d4784b3a543a0fb9ce5677ed13a9a3/windowsdesktop-runtime-6.0.11-win-x86.exe', 'https://download.visualstudio.microsoft.com/download/pr/0192a249-3ec8-4374-a827-e186dd58d55d/cec046575f3eb2247a10ba3d50f5cf6c/windowsdesktop-runtime-6.0.11-win-x64.exe'),
+      '', False, False);
+  end;
+end;
+
+procedure Dependency_AddDotNet60Sdk;
+begin
+  // https://dotnet.microsoft.com/download/dotnet/6.0
+  if not Dependency_IsNetSdkInstalled('6.0.403') then begin
+    Dependency_Add('dotnet60sdk' + Dependency_ArchSuffix + '.exe',
+      '/install /quiet /norestart',
+      '.NET SDK 6.0.403' + Dependency_ArchTitle,
+      Dependency_String('https://download.visualstudio.microsoft.com/download/pr/c2bf9927-2746-4126-b839-1080b360f348/17191138699683165a20fde56571f433/dotnet-sdk-6.0.403-win-x86.exe', 'https://download.visualstudio.microsoft.com/download/pr/08ada4db-1e64-4829-b36d-5beb71f67bff/b77050cf7e0c71d3b95418651db1a9b8/dotnet-sdk-6.0.403-win-x64.exe'),
       '', False, False);
   end;
 end;
@@ -624,6 +666,8 @@ end;
   #define UseDotNet60Desktop
 #endif
 
+#define UseDotNet60Sdk
+
 #define UseVC2005
 #define UseVC2008
 #define UseVC2010
@@ -750,6 +794,9 @@ begin
 #endif
 #ifdef UseDotNet60Desktop
   Dependency_AddDotNet60Desktop;
+#endif
+#ifdef UseDotNet60Sdk
+  Dependency_AddDotNet60Sdk;
 #endif
 
 #ifdef UseVC2005
