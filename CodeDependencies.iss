@@ -445,7 +445,7 @@ end;
 procedure Dependency_AddDotNet60Sdk;
 begin
   // https://dotnet.microsoft.com/download/dotnet/6.0
-  if not Dependency_IsNetSdkInstalled('6.0.403') then begin
+  if not Dependency_IsNetSdkInstalled('6.0.4') then begin
     Dependency_Add('dotnet60sdk' + Dependency_ArchSuffix + '.exe',
       '/install /quiet /norestart',
       '.NET SDK 6.0.403' + Dependency_ArchTitle,
