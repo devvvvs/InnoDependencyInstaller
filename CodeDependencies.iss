@@ -224,6 +224,36 @@ begin
   Result := ShellExec('', ExpandConstant('{tmp}{\}') + 'netcorecheck' + Dependency_ArchSuffix + '.exe', Version, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
 end;
 
+{ Exec with output stored in result. }
+{ ResultString will only be altered if True is returned. }
+function ExecWithResult(const Filename, Params, WorkingDir: String; const ShowCmd: Integer;
+  const Wait: TExecWait; var ResultCode: Integer; var ResultString: String): Boolean;
+var
+  TempFilename: String;
+  Command: String;
+  TempResultString: AnsiString;
+begin
+  TempFilename := ExpandConstant('{tmp}\~execwithresult.txt');
+  { Exec via cmd and redirect output to file. Must use special string-behavior to work. }
+  Command :=
+    Format('"%s" /S /C ""%s" %s > "%s""', [
+      ExpandConstant('{cmd}'), Filename, Params, TempFilename]);
+  Result := Exec(ExpandConstant('{cmd}'), Command, WorkingDir, ShowCmd, Wait, ResultCode);
+  if not Result then
+    Exit;
+  LoadStringFromFile(TempFilename, TempResultString);  { Cannot fail }
+  DeleteFile(TempFilename);
+  ResultString := String(TempResultString);
+end;
+
+function Dependency_IsNetSdkInstalled(const Version: String): Boolean;
+var
+  ResultCode: Integer;
+  ResultString: String;
+begin
+  Result := ExecWithResult('dotnet', '--list-sdks', '', SW_HIDE, ewWaitUntilTerminated, ResultCode, ResultString) and (ResultCode = 0) and (Pos(Version, ResultString) > 0);
+end;
+
 procedure Dependency_AddDotNet35;
 begin
   // https://dotnet.microsoft.com/download/dotnet-framework/net35-sp1
@@ -475,6 +505,19 @@ begin
       '/lcid ' + IntToStr(GetUILanguage) + ' /passive /norestart',
       '.NET Desktop Runtime 8.0.0' + Dependency_ArchTitle,
       Dependency_String('https://download.visualstudio.microsoft.com/download/pr/f9e3b581-059d-429f-9f0d-1d1167ff7e32/bd7661030cd5d66cd3eee0fd20b24540/windowsdesktop-runtime-8.0.0-win-x86.exe', 'https://download.visualstudio.microsoft.com/download/pr/b280d97f-25a9-4ab7-8a12-8291aa3af117/a37ed0e68f51fcd973e9f6cb4f40b1a7/windowsdesktop-runtime-8.0.0-win-x64.exe'),
+      '', False, False);
+  end;
+end;
+
+procedure Dependency_AddDotNet80Sdk;
+begin
+  // https://dotnet.microsoft.com/download/dotnet/8.0
+  if not Dependency_IsNetSdkInstalled('8.0.1') then begin
+    Dependency_Add('dotnet80sdk' + Dependency_ArchSuffix + '.exe',
+      '/install /quiet /norestart',
+      '.NET SDK 8.0.101' + Dependency_ArchTitle,
+      
+      Dependency_String('https://download.visualstudio.microsoft.com/download/pr/88238db3-d71e-4431-bba5-1f6d16f7a415/d1e7b4c6302c51f1e968d07391cac7e1/dotnet-sdk-8.0.101-win-x86.exe', 'https://download.visualstudio.microsoft.com/download/pr/cb56b18a-e2a6-4f24-be1d-fc4f023c9cc8/be3822e20b990cf180bb94ea8fbc42fe/dotnet-sdk-8.0.101-win-x64.exe'),
       '', False, False);
   end;
 end;
