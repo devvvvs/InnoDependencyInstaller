@@ -512,12 +512,12 @@ end;
 procedure Dependency_AddDotNet80Sdk;
 begin
   // https://dotnet.microsoft.com/download/dotnet/8.0
-  if not Dependency_IsNetSdkInstalled('8.0.1') then begin
+  if not Dependency_IsNetSdkInstalled('8.0.2') then begin
     Dependency_Add('dotnet80sdk' + Dependency_ArchSuffix + '.exe',
       '/install /quiet /norestart',
-      '.NET SDK 8.0.101' + Dependency_ArchTitle,
+      '.NET SDK 8.0.201' + Dependency_ArchTitle,
       
-      Dependency_String('https://download.visualstudio.microsoft.com/download/pr/88238db3-d71e-4431-bba5-1f6d16f7a415/d1e7b4c6302c51f1e968d07391cac7e1/dotnet-sdk-8.0.101-win-x86.exe', 'https://download.visualstudio.microsoft.com/download/pr/cb56b18a-e2a6-4f24-be1d-fc4f023c9cc8/be3822e20b990cf180bb94ea8fbc42fe/dotnet-sdk-8.0.101-win-x64.exe'),
+      Dependency_String('https://download.visualstudio.microsoft.com/download/pr/8ec9b629-825f-4c8e-82b5-44441b820c1e/f53e02358a5326cf9af83591ed12fb78/dotnet-sdk-8.0.201-win-x86.exe', 'https://download.visualstudio.microsoft.com/download/pr/ab5e947d-3bfc-4948-94a1-847576d949d4/bb11039b70476a33d2023df6f8201ae2/dotnet-sdk-8.0.201-win-x64.exe'),
       '', False, False);
   end;
 end;
