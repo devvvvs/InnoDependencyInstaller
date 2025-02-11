@@ -256,6 +256,16 @@ begin
   Result := ExecWithResult('dotnet', '--list-sdks', '', SW_HIDE, ewWaitUntilTerminated, ResultCode, ResultString) and (ResultCode = 0) and (Pos(Version, ResultString) > 0);
 end;
 
+function Dependency_IsWinAppRuntimeInstalled(const Version: String): Boolean;
+var
+  argStr: String;
+  ResultCode: Integer;
+  ResultString: String;
+begin
+  argStr := '-Command "(Get-AppxPackage Microsoft.WindowsAppRuntime.' + Version + ' | Where-Object { $_.Architecture -eq ''x64'' }).PackageFullName"';
+  Result := ExecWithResult('powershell', argStr, '', SW_HIDE, ewWaitUntilTerminated, ResultCode, ResultString) and (ResultCode = 0) and (Pos(Version, ResultString) > 0);
+end;
+
 procedure Dependency_AddVC2013;
 begin
   // https://support.microsoft.com/en-us/help/4032938
@@ -280,6 +290,22 @@ begin
       'https://download.visualstudio.microsoft.com/download/pr/523db424-b1cc-425d-97f5-bd0e9b0c7440/f04171a6d597780662d809107a13f44e/dotnet-sdk-8.0.401-win-x86.exe', 
       'https://download.visualstudio.microsoft.com/download/pr/f5f1c28d-7bc9-431e-98da-3e2c1bbd1228/864e152e374b5c9ca6d58ee953c5a6ed/dotnet-sdk-8.0.401-win-x64.exe',
       'https://download.visualstudio.microsoft.com/download/pr/f4f3c82d-4d24-4e01-87fe-67b6d9213f42/d33ef29315ad07d303993695f7b93479/dotnet-sdk-8.0.401-win-arm64.exe'),
+      '', False, False);
+  end;
+end;
+
+procedure Dependency_AddWinAppRuntime;
+begin
+  // https://dotnet.microsoft.com/download/dotnet/8.0
+  if not Dependency_IsWinAppRuntimeInstalled('1.6') then begin
+    Dependency_Add('WindowsAppRuntimeInstall' + Dependency_ArchSuffix + '.exe',
+      '--quiet',
+      'Microsoft Windows App SDK runtime' + Dependency_ArchTitle,
+      
+      Dependency_String(
+      'https://aka.ms/windowsappsdk/1.6/1.6.250108002/windowsappruntimeinstall-x86.exe', 
+      'https://aka.ms/windowsappsdk/1.6/1.6.250108002/windowsappruntimeinstall-x64.exe',
+      'https://aka.ms/windowsappsdk/1.6/1.6.250108002/windowsappruntimeinstall-arm64.exe'),
       '', False, False);
   end;
 end;
