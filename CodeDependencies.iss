@@ -301,7 +301,7 @@ begin
   // this shows versions in the format 6000.373.1641 which is different to the versions shown on the page
   // for the following dependency check we use the highest of those numbers found 
   // after installing the latest version of the installer from the website
-  if not Dependency_IsWinAppRuntimeInstalled('6000.373.1641') then begin
+  if not Dependency_IsWinAppRuntimeInstalled('6000.373.1641*') then begin
     Dependency_Add('WindowsAppRuntimeInstall' + Dependency_ArchSuffix + '.exe',
       '--quiet',
       'Microsoft Windows App SDK runtime' + Dependency_ArchTitle,
