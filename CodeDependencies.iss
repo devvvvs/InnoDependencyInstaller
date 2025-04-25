@@ -17,7 +17,7 @@ type
 var
   Dependency_Memo: String;
   Dependency_List: array of TDependency_Entry;
-  Dependency_NeedRestart, Dependency_ForceX86: Boolean;
+  Dependency_NeedRestart, Dependency_ForceX86, Dependency_IsX64, Dependency_IsArm64: Boolean;
   Dependency_DownloadPage: TDownloadWizardPage;
 
 procedure Dependency_Add(const Filename, Parameters, Title, URL, Checksum: String; const ForceSuccess, RestartAfter: Boolean);
@@ -189,14 +189,9 @@ begin
   Result := Dependency_NeedRestart;
 end;
 
-function Dependency_IsX64: Boolean;
-begin
-  Result := not Dependency_ForceX86 and Is64BitInstallMode;
-end;
-
 function Dependency_String(const x86, x64, arm64: String): String;
 begin
-  if IsArm64 then begin
+  if Dependency_IsArm64 then begin
     Result := arm64;
   end else if Dependency_IsX64 then begin
     Result := x64;
