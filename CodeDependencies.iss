@@ -275,16 +275,6 @@ begin
   Result := ExecWithResult('dotnet', '--list-sdks', '', SW_HIDE, ewWaitUntilTerminated, ResultCode, ResultString) and (ResultCode = 0) and (Pos(Version, ResultString) > 0);
 end;
 
-function Dependency_IsWinAppRuntimeInstalled(const Version: String): Boolean;
-var
-  argStr: String;
-  ResultCode: Integer;
-  ResultString: String;
-begin
-  argStr := '-Command "(Get-AppxPackage Microsoft.WinAppRuntime.DDLM.' + Version + '* | Where-Object { $_.Architecture -eq ' + Dependency_String('x86', 'x64', 'arm64') + ' }).PackageFullName"';
-  Result := ExecWithResult('powershell', argStr, '', SW_HIDE, ewWaitUntilTerminated, ResultCode, ResultString) and (ResultCode = 0) and (Pos(Version, ResultString) > 0);
-end;
-
 procedure Dependency_AddVC2013;
 begin
   // https://support.microsoft.com/en-us/help/4032938
@@ -311,26 +301,6 @@ begin
       '/install /quiet /norestart',
       '.NET SDK ' + versionStr + Dependency_ArchTitle,
       'https://builds.dotnet.microsoft.com/dotnet/Sdk/' + versionStr + '/' + file,
-      '', False, False);
-  end;
-end;
-
-procedure Dependency_AddWinAppRuntime;
-begin
-  // https://learn.microsoft.com/de-de/windows/apps/windows-app-sdk/downloads
-  // use powershell to run: Get-AppxPackage Microsoft.WinAppRuntime.ddlm
-  // this shows versions in the format 6000.373.1641 which is different to the versions shown on the page
-  // for the following dependency check we use the highest of those numbers found 
-  // after installing the latest version of the installer from the website
-  if not Dependency_IsWinAppRuntimeInstalled('6000.373.1641') then begin
-    Dependency_Add('WindowsAppRuntimeInstall' + Dependency_ArchSuffix + '.exe',
-      '--quiet',
-      'Microsoft Windows App SDK runtime' + Dependency_ArchTitle,
-      
-      Dependency_String(
-      'https://aka.ms/windowsappsdk/1.6/1.6.250108002/windowsappruntimeinstall-x86.exe', 
-      'https://aka.ms/windowsappsdk/1.6/1.6.250108002/windowsappruntimeinstall-x64.exe',
-      'https://aka.ms/windowsappsdk/1.6/1.6.250108002/windowsappruntimeinstall-arm64.exe'),
       '', False, False);
   end;
 end;
