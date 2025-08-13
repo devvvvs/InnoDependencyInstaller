@@ -281,7 +281,7 @@ var
   ResultCode: Integer;
   ResultString: String;
 begin
-  argStr := '-Command "(Get-AppxPackage Microsoft.WinAppRuntime.DDLM.' + Version + '* | Where-Object { $_.Architecture -eq ''x64'' }).PackageFullName"';
+  argStr := '-Command "(Get-AppxPackage Microsoft.WinAppRuntime.DDLM.' + Version + '* | Where-Object { $_.Architecture -eq ' + Dependency_String('x86', 'x64', 'arm64') + ' }).PackageFullName"';
   Result := ExecWithResult('powershell', argStr, '', SW_HIDE, ewWaitUntilTerminated, ResultCode, ResultString) and (ResultCode = 0) and (Pos(Version, ResultString) > 0);
 end;
 
