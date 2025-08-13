@@ -225,8 +225,8 @@ var
   PackedVersion: Int64;
   LineMajor, LineMinor, LineRevision, LineBuild: Word;
 begin
-  if not RegQueryStringValue(HKLM32, 'SOFTWARE\dotnet\Setup\InstalledVersions\x' + Dependency_String('86', '64'), 'InstallLocation', Path) or not FileExists(Path + 'dotnet.exe') then begin
-    Path := ExpandConstant(Dependency_String('{commonpf32}', '{commonpf64}')) + '\dotnet\';
+  if not RegQueryStringValue(HKLM32, 'SOFTWARE\dotnet\Setup\InstalledVersions\' + Dependency_String('x86', 'x64', 'arm64'), 'InstallLocation', Path) or not FileExists(Path + 'dotnet.exe') then begin
+    Path := ExpandConstant(Dependency_String('{commonpf32}', '{commonpf64}', '{commonpf}')) + '\dotnet\';
   end;
   if ExecAndCaptureOutput(Path + 'dotnet.exe', '--list-runtimes', '', SW_HIDE, ewWaitUntilTerminated, ResultCode, Output) and (ResultCode = 0) then begin
     for LineIndex := 0 to Length(Output.StdOut) - 1 do begin
@@ -298,17 +298,19 @@ begin
 end;
 
 procedure Dependency_AddDotNet80Sdk;
+var
+  versionStr: String;
+  file: String;
 begin
+  versionStr := '8.0.413';
+  file := 'dotnet-sdk-' + versionStr + '-win-' + Dependency_String('x86', 'x64', 'arm64') + '.exe';
   // https://dotnet.microsoft.com/download/dotnet/8.0
-  if not Dependency_IsNetSdkInstalled('8.0.4') then begin
-    Dependency_Add('dotnet80sdk' + Dependency_ArchSuffix + '.exe',
+  if not Dependency_IsNetSdkInstalled(versionStr) then begin
+    Dependency_Add(
+      file,
       '/install /quiet /norestart',
-      '.NET SDK 8.0.401' + Dependency_ArchTitle,
-      
-      Dependency_String(
-      'https://download.visualstudio.microsoft.com/download/pr/523db424-b1cc-425d-97f5-bd0e9b0c7440/f04171a6d597780662d809107a13f44e/dotnet-sdk-8.0.401-win-x86.exe', 
-      'https://download.visualstudio.microsoft.com/download/pr/f5f1c28d-7bc9-431e-98da-3e2c1bbd1228/864e152e374b5c9ca6d58ee953c5a6ed/dotnet-sdk-8.0.401-win-x64.exe',
-      'https://download.visualstudio.microsoft.com/download/pr/f4f3c82d-4d24-4e01-87fe-67b6d9213f42/d33ef29315ad07d303993695f7b93479/dotnet-sdk-8.0.401-win-arm64.exe'),
+      '.NET SDK ' + versionStr + Dependency_ArchTitle,
+      'https://builds.dotnet.microsoft.com/dotnet/Sdk/' + versionStr + '/' + file,
       '', False, False);
   end;
 end;
@@ -334,13 +336,17 @@ begin
 end;
 
 procedure Dependency_AddVC2015To2022;
+var
+  file: String;
 begin
+  file := 'VC_redist.' + Dependency_String('x86', 'x64', 'arm64') + '.exe';
   // https://docs.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist
-  if not IsMsiProductInstalled(Dependency_String('{65E5BD06-6392-3027-8C26-853107D3CF1A}', '{36F68A90-239C-34DF-B58C-64B30153CE35}', '{DC9BAE42-810B-423A-9E25-E4073F1C7B00}'), PackVersionComponents(14, 42, 34433, 0)) then begin
-    Dependency_Add('vcredist2022' + Dependency_ArchSuffix + '.exe',
+  if not IsMsiProductInstalled(Dependency_String('{65E5BD06-6392-3027-8C26-853107D3CF1A}', '{36F68A90-239C-34DF-B58C-64B30153CE35}', '{DC9BAE42-810B-423A-9E25-E4073F1C7B00}'), PackVersionComponents(14, 44, 35211, 0)) then begin
+    Dependency_Add(
+      file,
       '/passive /norestart',
       'Visual C++ 2015-2022 Redistributable' + Dependency_ArchTitle,
-      Dependency_String('https://aka.ms/vs/17/release/vc_redist.x86.exe', 'https://aka.ms/vs/17/release/vc_redist.x64.exe', 'https://aka.ms/vs/17/release/vc_redist.arm64.exe'),
+      'https://aka.ms/vs/17/release/' + file,
       '', False, False);
   end;
 end;
