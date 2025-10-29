@@ -271,8 +271,56 @@ function Dependency_IsNetSdkInstalled(const Version: String): Boolean;
 var
   ResultCode: Integer;
   ResultString: String;
+  LineIndex: Integer;
+  Lines: TArrayOfString;
+  LineParts: TArrayOfString;
+  InstalledVersion: String;
+  RequiredMajor, RequiredMinor, RequiredPatch: Integer;
+  InstalledMajor, InstalledMinor, InstalledPatch: Integer;
+  VersionParts: TArrayOfString;
+  InstalledVersionParts: TArrayOfString;
 begin
-  Result := ExecWithResult('dotnet', '--list-sdks', '', SW_HIDE, ewWaitUntilTerminated, ResultCode, ResultString) and (ResultCode = 0) and (Pos(Version, ResultString) > 0);
+  Result := False;
+  
+  if not ExecWithResult('dotnet', '--list-sdks', '', SW_HIDE, ewWaitUntilTerminated, ResultCode, ResultString) or (ResultCode <> 0) then
+    Exit;
+  
+  // Parse required version (e.g., "8.0.413")
+  VersionParts := StringSplit(Version, ['.'], stExcludeEmpty);
+  if Length(VersionParts) < 3 then
+    Exit;
+  
+  RequiredMajor := StrToIntDef(VersionParts[0], -1);
+  RequiredMinor := StrToIntDef(VersionParts[1], -1);
+  RequiredPatch := StrToIntDef(VersionParts[2], -1);
+  
+  if (RequiredMajor < 0) or (RequiredMinor < 0) or (RequiredPatch < 0) then
+    Exit;
+  
+  // Parse output line by line
+  Lines := StringSplit(ResultString, [#13#10], stExcludeEmpty);
+  
+  for LineIndex := 0 to Length(Lines) - 1 do begin
+    LineParts := StringSplit(Trim(Lines[LineIndex]), [' '], stExcludeEmpty);
+
+    // Each line format: "8.0.413 [C:\Program Files\dotnet\sdk]"
+    if Length(LineParts) >= 1 then begin
+      InstalledVersion := LineParts[0];
+      InstalledVersionParts := StringSplit(InstalledVersion, ['.'], stExcludeEmpty);
+      
+      if Length(InstalledVersionParts) >= 3 then begin
+        InstalledMajor := StrToIntDef(InstalledVersionParts[0], -1);
+        InstalledMinor := StrToIntDef(InstalledVersionParts[1], -1);
+        InstalledPatch := StrToIntDef(InstalledVersionParts[2], -1);
+        
+        // Check if installed SDK matches major.minor and has patch >= required
+        if (InstalledMajor = RequiredMajor) and (InstalledMinor = RequiredMinor) and (InstalledPatch >= RequiredPatch) then begin
+          Result := True;
+          Exit;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure Dependency_AddVC2013;
