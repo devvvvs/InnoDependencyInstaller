@@ -335,12 +335,12 @@ begin
   end;
 end;
 
-procedure Dependency_AddDotNet80Sdk;
+procedure Dependency_AddDotNet100Sdk;
 var
   versionStr: String;
   file: String;
 begin
-  versionStr := '8.0.413';
+  versionStr := '10.0.301';
   file := 'dotnet-sdk-' + versionStr + '-win-' + Dependency_String('x86', 'x64', 'arm64') + '.exe';
   // https://dotnet.microsoft.com/download/dotnet/8.0
   if not Dependency_IsNetSdkInstalled(versionStr) then begin
